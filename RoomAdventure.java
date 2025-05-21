@@ -68,6 +68,37 @@ public class RoomAdventure { // Main class containing game logic
         }
     }
 
+    private static void handleEat(String noun) { // Handles eating items
+        String message; // New message variable
+        boolean found = false; // New found variable
+        for (int i = 0; i < inventory.length; i++) { // Loops through inventory
+            if (inventory[i] != null && inventory[i].equals(noun)) { // Checks inventory for item
+                switch (noun) { // Print message depending on item
+                    case "toothbrush":
+                        message = "You chew the toothbrush, damaging your teeth.";
+                        break;
+                    case "coal":
+                        message = "You eat the coal, blackening your teeth.";
+                        break;
+                    case "key":
+                        message = "You swallowed the key. Hopefully you didn't need that.";
+                        break;
+                    default:
+                        message = "You can't eat that!";
+                        status = message;
+                        return;
+                }
+                inventory[i] = null; // Remove item from inventory
+                status = message; // Show message
+                found = true; // Update variable
+                break; // Exit loop
+            }
+        }
+        if (!found) {
+            status = "You don't have that item to eat!"; // Displays message if item is missing
+        }
+    }
+
     private static void setupGame() { // Initializes game world
         Room room1 = new Room("Room 1"); // Create Room 1
         Room room2 = new Room("Room 2"); // Create Room 2
@@ -153,6 +184,9 @@ public class RoomAdventure { // Main class containing game logic
                     break;
                 case "take": // If verb is 'take'
                     handleTake(noun); // Pick up an item
+                    break;
+                case "eat": // If verb is 'eat'
+                    handleEat(noun); // Eat an item
                     break;
                 default: // If verb is unrecognized
                     status = DEFAULT_STATUS; // Set status to error message
