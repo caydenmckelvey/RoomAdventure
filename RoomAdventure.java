@@ -7,6 +7,8 @@ public class RoomAdventure { // Main class containing game logic
     private static Room currentRoom; // The room the player is currently in
     private static String[] inventory = {null, null, null, null, null}; // Player inventory slots
     private static String status; // Message to display after each action
+    private static boolean lever2aPressed = false; // Track if lever in Room 2a is pressed
+    private static boolean lever2bPressed = false; // Track if lever in Room 2b is pressed
 
     // Constants
 
@@ -41,6 +43,21 @@ public class RoomAdventure { // Main class containing game logic
     private static void handleTake(String noun) { // Handles picking up items
         String[] grabbables = currentRoom.getGrabbables(); // Items that can be taken
         status = "I can't grab that."; // Default if not grabbable
+
+        // Handle lever puzzle interaction (new functionality)
+        if (noun.equals("lever") && currentRoom.getName().equals("Room 2a")) {
+            lever2aPressed = true;
+            status = "The lever clicks into place! You hear a mechanism activate...";
+            checkPuzzleCompletion();
+            return;
+        }
+        if (noun.equals("lever") && currentRoom.getName().equals("Room 2b")) {
+            lever2bPressed = true;
+            status = "The lever clicks into place! You hear a mechanism activate...";
+            checkPuzzleCompletion();
+            return;
+        }
+
         for (String item : grabbables) { // Loop through grabbable items
             if (noun.equals(item)) { // If user-noun matches grabbable
                 boolean added = false; // New variable to detect if item is added
@@ -64,6 +81,36 @@ public class RoomAdventure { // Main class containing game logic
                     status = "Inventory is full."; // Displays message if inventory is full
                 }
                 break; // Exit grabbable loop
+            }
+        }
+    }
+
+    // New function to handle lever puzzle completion
+    private static void checkPuzzleCompletion() { // Checks if both levers are pressed
+        if (lever2aPressed && lever2bPressed) { // If both levers are activated
+            // Find room2 to add the golden timepiece
+            for (Room room : currentRoom.getExitDestinations()) { // Check connected rooms
+                if (room.getName().equals("Room 2")) { // Found room2
+                    // Add golden timepiece to room2's grabbables
+                    String[] newGrabbables = new String[room.getGrabbables().length + 1];
+                    System.arraycopy(room.getGrabbables(), 0, newGrabbables, 0, room.getGrabbables().length);
+                    newGrabbables[newGrabbables.length - 1] = "golden timepiece";
+                    room.setGrabbables(newGrabbables);
+                    
+                    // Add golden timepiece to room2's items and description, and if you were wondering, yes it's a reference to something
+                    String[] newItems = new String[room.getItems().length + 1];
+                    System.arraycopy(room.getItems(), 0, newItems, 0, room.getItems().length);
+                    newItems[newItems.length - 1] = "golden timepiece";
+                    room.setItems(newItems);
+                    
+                    String[] newDescriptions = new String[room.getItemDescriptions().length + 1];
+                    System.arraycopy(room.getItemDescriptions(), 0, newDescriptions, 0, room.getItemDescriptions().length);
+                    newDescriptions[newDescriptions.length - 1] = "A shiny golden timepiece has appeared!";
+                    room.setItemDescriptions(newDescriptions);
+                    
+                    status = "You hear a loud clunk! Something has changed in Room 2...";
+                    break;
+                }
             }
         }
     }
@@ -103,6 +150,8 @@ public class RoomAdventure { // Main class containing game logic
         Room room1 = new Room("Room 1"); // Create Room 1
         Room room2 = new Room("Room 2"); // Create Room 2
         Room room3 = new Room("Room 3"); // Create Room 3
+        Room room2a = new Room("Room 2a"); // Create new Room 2a
+        Room room2b = new Room("Room 2b"); // Create new Room 2b
 
         String[] room1ExitDirections = {"east", "south"}; // Room 1 exits
         Room[] room1ExitDestinations = {room2, room3}; // Destination rooms for Room 1
@@ -118,8 +167,8 @@ public class RoomAdventure { // Main class containing game logic
         room1.setItemDescriptions(room1ItemDescriptions); // Set item descriptions
         room1.setGrabbables(room1Grabbables); // Set grabbable items
 
-        String[] room2ExitDirections = {"west"}; // Room 2 exits
-        Room[] room2ExitDestinations = {room1}; // Destination rooms for Room 2
+        String[] room2ExitDirections = {"west", "north", "south"}; // Modified Room 2 exits
+        Room[] room2ExitDestinations = {room1, room2a, room2b}; // Modified destination rooms for Room 2
         String[] room2Items = {"fireplace", "rug"}; // Items in Room 2
         String[] room2ItemDescriptions = { // Descriptions for Room 2 items
             "It's on fire.",
@@ -145,6 +194,35 @@ public class RoomAdventure { // Main class containing game logic
         room3.setItems(room3Items); // Set visible items
         room3.setItemDescriptions(room3ItemDescriptions); // Set item descriptions
         room3.setGrabbables(room3Grabbables); // Set grabbable items
+
+        // Setup for new Room 2a
+        String[] room2aExitDirections = {"south"}; // Room 2a exits
+        Room[] room2aExitDestinations = {room2}; // Destination rooms for Room 2a
+        String[] room2aItems = {"lever"}; // Items in Room 2a
+        String[] room2aItemDescriptions = { // Descriptions for Room 2a items
+            "A rusty lever. It might move if you try to take it."
+        };
+        String[] room2aGrabbables = {"lever"}; // Items you can take in Room 2a
+        room2a.setExitDirections(room2aExitDirections); // Set exits
+        room2a.setExitDestinations(room2aExitDestinations); // Set exit destinations
+        room2a.setItems(room2aItems); // Set visible items
+        room2a.setItemDescriptions(room2aItemDescriptions); // Set item descriptions
+        room2a.setGrabbables(room2aGrabbables); // Set grabbable items
+
+        // Setup for new Room 2b
+        String[] room2bExitDirections = {"north"}; // Room 2b exits
+        Room[] room2bExitDestinations = {room2}; // Destination rooms for Room 2b
+        String[] room2bItems = {"lever", "note"}; // Items in Room 2b
+        String[] room2bItemDescriptions = { // Descriptions for Room 2b items
+            "A rusty lever. It might move if you try to take it.",
+            "There seems to be two levers somewhere in here.. I'd guess they are linked to some treasure."
+        };
+        String[] room2bGrabbables = {"lever"}; // Items you can take in Room 2b (note is not grabbable)
+        room2b.setExitDirections(room2bExitDirections); // Set exits
+        room2b.setExitDestinations(room2bExitDestinations); // Set exit destinations
+        room2b.setItems(room2bItems); // Set visible items
+        room2b.setItemDescriptions(room2bItemDescriptions); // Set item descriptions
+        room2b.setGrabbables(room2bGrabbables); // Set grabbable items
 
         currentRoom = room1; // Start game in Room 1
     }
@@ -222,6 +300,10 @@ class Room { // Represents a game room
     }
 
     // Getters and Setters
+
+    public String getName() { // Getter for room name
+        return name;
+    }
 
     public void setExitDirections(String[] exitDirections) { // Setter for exits
         this.exitDirections = exitDirections;
